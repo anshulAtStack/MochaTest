@@ -1,28 +1,43 @@
 var request = require('supertest');
 var app = require('../../server/server.js');
 var should = require('should');
+
+//Server object will hit our db.json running at localhost
 var server = request.agent("http://localhost:3000");
-var createdUserId,newUser,updatedUser,patchedUser;
+
+
+var createdUserId,  //after post the id received will be assigned to this.
+            newUser,  // newUser object that has to be posted or created.
+            updatedUser, //user object that has to be sent for update
+            patchedUser;  // patched object for the patch request.
 describe('Account Model REST API',function(){
 
-
+  //Will retrieve all the users. I have ommitted the number of users
+  //that has to be returned.
   it('Retrieve all users',function(done){
     server
-      .get('/account')
-      .expect(200)
-      .expect('Content-Type', /json/)
+      .get('/account')  //account is our entity name.
+      .expect(200)  //if successful get will return a status code of 200
+      .expect('Content-Type', /json/) //with a content type of json
       .end(function(err,res){
         if(err)
-          return done(err);
+          return done(err); // if error. done with err object.
 
           res.body.should.be.instanceOf(Array);
+          // the returned res should have body and that should be of type array.
 
           done();
+          // if everything is good.call this function to state that your
+          //test case has passed
 
       })
   })
 
+  //Create a user. id must not be provided while creating a user
+  // It is the duty of server to create the id.
   it('Create a user',function(done){
+
+    // New user object that has to be created in db.json
      newUser = {
 
       "username": "deepak",
@@ -30,25 +45,30 @@ describe('Account Model REST API',function(){
       "role": "admin",
       "isActive": false
     }
+
+    //server request to send a post request.
     server
     .post('/account')
-    .send(newUser)
-    .expect(201)
+    .set('Content-Type','application/json')
+    .send(newUser)  // send the newUser object along with the post request
+    .expect(201)  // post sends a 201 status code after successful completion.
     .expect('Content-Type',/json/)
     .end(function(err,res){
       if(err){return done(err)}
       else
       {
+        // compares the return user object with the object passed for creation.
         if(compareUsers(res,newUser))
         {
-          createdUserId = res.body.id;
+          createdUserId = res.body.id;  //assign the newly created object's id.
 
-          done();
+          done(); //test case passes.
         }
       }
     })
 
   })
+
 
   it('Retrieve a user with id',function(done){
     server
@@ -71,6 +91,11 @@ describe('Account Model REST API',function(){
       "role": "admin",
       "isActive": true
     }
+    //checking so that the new user object has all the req fields.
+    updatedUser.should.have.property('username');
+    updatedUser.should.have.property('secret');
+    updatedUser.should.have.property('role');
+    updatedUser.should.have.property('isActive');
     server
       .put('/account/'+createdUserId)
       .send(updatedUser)
@@ -93,6 +118,7 @@ describe('Account Model REST API',function(){
       "role": "admin",
       "isActive": true
     }
+    //checking so that the new user object has all the req fields.
     patchedUser.should.have.property('username');
     patchedUser.should.have.property('secret');
     patchedUser.should.have.property('role');
@@ -117,7 +143,7 @@ describe('Account Model REST API',function(){
 
 })
 
-
+//check that the returned object has all the properties and correct values.
 function compareUsers(res,newUser){
   try{
   res.body.should.have.property('id');
